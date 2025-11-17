@@ -74,20 +74,39 @@ Agent: *Refactors, updates all usages, tests, and documents changes*
    cd agentic-dev-system
    ```
 
-2. **Configure environment**:
+2. **Get API Keys (FREE)**:
+
+   **Groq API Key (Free)**:
+   - Visit: https://console.groq.com/keys
+   - Sign up and create an API key
+
+   **Daytona API Key (Free tier)**:
+   - Visit: https://app.daytona.io/dashboard/keys
+   - Sign up and create an API key
+
+3. **Configure environment (SECURE)**:
    ```bash
    cp .env.example .env
-   # Edit .env and add your API keys
+   # Edit .env and add your API keys (LOCAL ONLY!)
    nano .env
    ```
 
-   **Required configurations**:
-   - `LLM_API_KEY` - Your LLM API key
-   - `LLM_BASE_URL` - Your LLM provider URL
-   - `DAYTONA_API_KEY` - Your Daytona API key ([Get it here](https://app.daytona.io/dashboard/keys))
-   - `CODE_SERVER_PASSWORD` - Password for VS Code access
+   **⚠️ SECURITY WARNING**: The `.env` file contains your secret API keys!
+   - ✅ Keep `.env` on your local machine ONLY
+   - ✅ It's already in `.gitignore` - never commit it!
+   - ❌ NEVER push `.env` to GitHub
+   - ❌ NEVER share your API keys
 
-3. **Start the system**:
+   **Required in .env**:
+   ```env
+   LLM_API_KEY=gsk_your_groq_key_here
+   DAYTONA_API_KEY=dtn_your_daytona_key_here
+   CODE_SERVER_PASSWORD=your_secure_password
+   ```
+
+   📖 **For detailed security setup**: [SECURITY_SETUP.md](./SECURITY_SETUP.md)
+
+4. **Start the system**:
    ```bash
    docker-compose up -d
    ```
