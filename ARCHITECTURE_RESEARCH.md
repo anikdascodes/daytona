@@ -12,6 +12,11 @@
 3. [Linux & Container Control](#3-linux--container-control)
 4. [Browser Automation Systems](#4-browser-automation-systems)
 5. [Complete Integrated Agent Systems](#5-complete-integrated-agent-systems)
+   - 5.1 [OpenHands](#51-openhands-open-source-ai-software-engineer)
+   - 5.2 [SWE-agent](#52-swe-agent-princeton)
+   - 5.3 [Anthropic Computer Use](#53-anthropic-computer-use)
+   - 5.4 [Cloud Development Environments](#54-cloud-development-environments)
+   - 5.5 [Manus AI](#55-manus-ai-autonomous-agent-system)
 6. [Architecture Comparison Matrix](#6-architecture-comparison-matrix)
 7. [Recommended Architecture](#7-recommended-architecture)
 
@@ -1074,6 +1079,498 @@ API → Daytona Cloud → Firecracker microVM → Dev Environment
 
 ---
 
+### 5.5 Manus AI (Autonomous Agent System)
+
+**Source**: Butterfly Effect Technology (Singapore)
+**Launch**: March 6, 2025
+**Purpose**: Fully autonomous AI agent for complex real-world tasks
+
+#### Overview
+
+Manus (Latin for "hand") is one of the first fully autonomous AI agents capable of independent reasoning, dynamic planning, and autonomous decision-making without continuous human supervision. It represents a significant evolution in agentic systems, combining cutting-edge architecture with production-ready engineering.
+
+#### Multi-Agent Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  USER TASK REQUEST                          │
+└──────────────────┬──────────────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────────────┐
+│            EXECUTOR AGENT (User Interface)                  │
+│  - Single point of user interaction                         │
+│  - No insight into internal agents (context isolation)      │
+└──────────────────┬──────────────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────────────┐
+│         ORCHESTRATION LAYER (Coordinator)                   │
+│  - Task decomposition and delegation                        │
+│  - Multi-agent coordination                                 │
+│  - State machine with tool masking                          │
+└──────────────────┬──────────────────────────────────────────┘
+                   │
+     ┌─────────────┼─────────────┐
+     │             │             │
+┌────▼────┐  ┌────▼────┐  ┌────▼────┐
+│ PLANNER │  │KNOWLEDGE│  │EXECUTION│
+│  AGENT  │  │  AGENT  │  │  AGENT  │
+└────┬────┘  └────┬────┘  └────┬────┘
+     │             │             │
+     │  ┌──────────▼──────────┐  │
+     │  │    MEMORY LAYER     │  │
+     │  │  - File-based       │  │
+     │  │  - todo.md tracking │  │
+     │  └─────────────────────┘  │
+     │                            │
+┌────▼────────────────────────────▼────┐
+│     CODE-ACT EXECUTION ENGINE        │
+│  - Python as action mechanism        │
+│  - 29 specialized tools              │
+│  - Browser Use framework             │
+└──────────────┬───────────────────────┘
+               │
+┌──────────────▼───────────────────────┐
+│     LINUX SANDBOX (Ubuntu)           │
+│  - Python 3.10                       │
+│  - Node.js 20                        │
+│  - Playwright (browser automation)   │
+│  - Full filesystem access            │
+└──────────────────────────────────────┘
+```
+
+#### Core Architecture Components
+
+**1. Planner Agent**
+- **Role**: Strategic task decomposition
+- **Function**: Breaks down complex goals into manageable sub-tasks
+- **Output**: Step-by-step execution plan with dependencies
+
+**2. Knowledge Agent**
+- **Role**: Information retrieval and context management
+- **Function**: Web search, document analysis, data extraction
+- **Isolation**: Hidden from executor agent (context length control)
+
+**3. Execution Agent**
+- **Role**: Action implementation
+- **Function**: Interfaces with external systems (browser, APIs, files, shell)
+- **Tools**: 29 specialized tools including Browser Use framework
+
+**4. Memory System**
+- **File-based storage**: Code and data in files (not in context)
+- **todo.md tracking**: Global plan maintained in recent attention span
+- **Context optimization**: Only conclusions/actions in live context
+
+#### Foundation Models
+
+**Primary**: Anthropic Claude 3.5/3.7 Sonnet
+**Secondary**: Alibaba Qwen (fine-tuned versions)
+**Approach**: Multi-model dynamic selection based on subtask requirements
+
+**Why Claude Sonnet**:
+- ✅ Superior reasoning for complex tasks
+- ✅ Large context window (200K tokens)
+- ✅ Excellent at following structured prompts
+- ✅ KV-cache optimization support
+
+#### Code-Act Methodology
+
+**Core Innovation**: Uses executable Python code as primary action mechanism instead of JSON function-calling
+
+**Architecture**: Based on LangGraph CodeAct implementation
+
+**Advantages**:
+```python
+# Traditional JSON function-calling (limited)
+{
+  "tool": "web_search",
+  "query": "Daytona sandboxes"
+}
+
+# Code-Act (flexible, composable)
+import requests
+results = requests.get("https://api.search.com", params={"q": "Daytona"})
+data = [r["title"] for r in results.json() if "sandbox" in r["text"]]
+save_to_file("results.json", data)
+```
+
+**Benefits**:
+- ✅ More expressive than JSON schemas
+- ✅ Can compose multiple operations
+- ✅ Handles complex data transformations
+- ✅ Fewer steps to solve complex tasks
+
+#### Browser Automation (Browser Use Framework)
+
+**Integration**: Manus uses the open-source Browser Use framework + Playwright
+
+```
+User Task: "Find flights NYC to London under $500"
+     ↓
+[Manus] Generates plan
+     ↓
+[Browser Use] AI-controlled browser navigation
+     ↓
+[Playwright] Low-level browser automation
+     ↓
+[Result] Extracted flight data
+```
+
+**Capabilities**:
+- ✅ Parse HTML at code level
+- ✅ Click buttons, fill forms
+- ✅ Navigate multi-page workflows
+- ✅ Extract structured data
+- ✅ Handle dynamic JavaScript content
+
+**Example**:
+```python
+# Browser Use in Manus
+from browser_use import Agent
+
+agent = Agent(
+    task="Search Google for Daytona sandboxes and summarize top 3 results",
+    llm=claude_sonnet,
+    browser=playwright_browser
+)
+
+result = await agent.run()
+# Agent autonomously:
+# 1. Opens browser
+# 2. Navigates to Google
+# 3. Searches for query
+# 4. Clicks top results
+# 5. Extracts content
+# 6. Summarizes findings
+```
+
+#### Context Engineering (Production Secret Sauce)
+
+Manus uses **context engineering instead of fine-tuning** for rapid iteration and reliability.
+
+**Key Principles**:
+
+**1. KV-Cache Optimization** (Most Critical Metric)
+
+```
+Cached tokens:   $0.30/MTok  }
+Uncached tokens: $3.00/MTok  } 10x cost difference!
+```
+
+**Rules**:
+- ❌ **NEVER** put timestamps at beginning of system prompt
+- ❌ **NEVER** modify previous actions/observations
+- ✅ **ALWAYS** make context append-only
+- ✅ **ALWAYS** preserve cache alignment
+
+**Impact**: Single-token difference can invalidate entire cache from that point forward
+
+**2. Tool Management via Masking**
+
+```
+Traditional (cache-breaking):
+- Dynamically add/remove tools from action space
+- Changes context → invalidates KV-cache
+- Confuses model with changing capabilities
+
+Manus Approach (cache-preserving):
+- All 29 tools always in context
+- State machine tracks when tools are valid
+- Logit masking during decoding prevents invalid tool calls
+- Context stays stable → cache stays valid
+```
+
+**3. File-Based Memory Management**
+
+```
+❌ Bad (bloats context):
+Context: [raw search results, 10 pages of data, ...]
+
+✅ Good (segregated memory):
+Files:   search_results.json (data stored here)
+Context: "Saved search results to file. Key finding: Daytona uses Firecracker..."
+```
+
+**Strategy**:
+- Code and data → Files (agent opens when needed)
+- Raw results → Saved to disk
+- Conclusions/actions → Live context only
+
+**Benefits**:
+- ✅ Context stays manageable
+- ✅ No "lost in the middle" issues
+- ✅ Can handle large datasets
+- ✅ Better long-term memory
+
+**4. Attention Manipulation (todo.md Pattern)**
+
+```
+Problem: Long context → agent forgets original goal
+
+Solution: Continuously update todo.md file
+┌─────────────────────────────────┐
+│ todo.md (always in recent memory)│
+├─────────────────────────────────┤
+│ ✅ Search for flight options     │
+│ ✅ Filter by price               │
+│ 🔄 Compare airlines              │
+│ ⬜ Book cheapest option          │
+│ ⬜ Send confirmation email       │
+└─────────────────────────────────┘
+```
+
+**Effect**: Pushes global plan into model's recent attention span, maintaining goal alignment across multi-step tasks
+
+**5. Error Preservation (Learning from Mistakes)**
+
+```
+❌ Bad (removes failed attempts):
+Action: install_package("numppy")  ← typo
+Result: Error: package not found
+[Remove from context]
+
+✅ Good (keeps failures):
+Action: install_package("numppy")
+Result: Error: package not found
+Action: install_package("numpy")   ← corrected
+Result: Success
+```
+
+**Benefit**: Seeing own mistakes helps agent learn, reduces repetition of same errors
+
+**6. Diversity Injection (Breaking Patterns)**
+
+```
+Same action, different serialization:
+
+Variation 1: "Execute command: ls -la"
+Variation 2: "Run shell: ls -la"
+Variation 3: "List directory contents"
+
+Purpose: Structured noise prevents repetitive behaviors
+```
+
+#### Agent Loop (Iterative Process)
+
+```
+1. ANALYZE
+   ↓
+   - Assess current state
+   - Review previous actions
+   - Check goal progress
+
+2. PLAN
+   ↓
+   - Decompose remaining work
+   - Select next tool/action
+   - Update todo.md
+
+3. EXECUTE
+   ↓
+   - Generate Python code (Code-Act)
+   - Run in sandbox
+   - Invoke tools (browser, shell, etc.)
+
+4. OBSERVE
+   ↓
+   - Capture results (stdout, files, etc.)
+   - Update memory
+   - Append to context (append-only!)
+
+5. REPEAT until TASK_COMPLETED
+```
+
+#### System Prompt Structure
+
+```
+<system_capability>
+  - List of 29 available tools
+  - Capabilities and limitations
+</system_capability>
+
+<browser_rules>
+  - When to use Browser Use
+  - How to extract data
+  - Error handling
+</browser_rules>
+
+<coding_rules>
+  - Python best practices
+  - Error handling patterns
+  - File management
+</coding_rules>
+
+<memory_management>
+  - When to save to files
+  - How to use todo.md
+  - Context optimization
+</memory_management>
+
+<execution_guidelines>
+  - Step-by-step thinking
+  - Verification steps
+  - Success criteria
+</execution_guidelines>
+```
+
+**Development Philosophy**: "Stochastic Gradient Descent"
+- Rebuilt framework 4 times
+- Manual prompt tuning and empirical testing
+- Architecture searching through iteration
+
+#### Technical Stack
+
+| Component | Technology |
+|-----------|-----------|
+| **Foundation LLM** | Claude 3.7 Sonnet, Qwen |
+| **Action Framework** | LangGraph CodeAct |
+| **Browser Automation** | Browser Use + Playwright |
+| **Sandbox** | Docker (Ubuntu + Python + Node) |
+| **Tools** | 29 specialized tools |
+| **Orchestration** | Custom multi-agent coordinator |
+
+#### Performance Benchmarks
+
+**GAIA Benchmark** (General AI Assistants):
+
+| Level | Manus | OpenAI Deep Research |
+|-------|-------|---------------------|
+| **Level 1** | 86.5% | 74.3% |
+| **Level 2** | 70.1% | 69.1% |
+| **Level 3** | 57.7% | 47.6% |
+
+**SWE-Bench** (Software Engineering):
+- Uses Manus architecture patterns
+- State-of-the-art performance on code tasks
+
+#### Unique Features
+
+**1. Asynchronous Operation**
+```
+Traditional: User must stay connected
+Manus: Cloud-based execution continues after user disconnects
+
+User → Submit task → Close laptop
+                 ↓
+          [Manus works autonomously]
+                 ↓
+User ← Notification: "Task completed!"
+```
+
+**2. Transparency ("Manus's Computer")**
+- Full session replay
+- View all actions taken
+- Inspect intermediate results
+- Debug agent reasoning
+
+**3. Multi-modal Input/Output**
+- **Input**: Text, images, tables, code
+- **Output**: Reports, visualizations, websites, spreadsheets
+
+#### Open-Source Replication
+
+Manus can be replicated using open-source components:
+
+```python
+# Simplified Manus architecture
+
+from langchain import CodeActAgent
+from browser_use import Agent as BrowserAgent
+from playwright.async_api import async_playwright
+
+# 1. Foundation (CodeAct agent)
+agent = CodeActAgent(
+    model="claude-3.7-sonnet",
+    tools=[
+        bash_tool,
+        file_tool,
+        browser_tool,
+        # ... 26 more tools
+    ]
+)
+
+# 2. Browser automation
+browser_agent = BrowserAgent(
+    task=task,
+    llm=claude,
+    browser=playwright_browser
+)
+
+# 3. Sandbox
+docker run -it ubuntu:22.04 \
+  -v /workspace:/workspace \
+  python3 agent.py
+```
+
+#### Key Innovations Summary
+
+1. **Multi-Agent Architecture**: Specialized agents (Planner, Knowledge, Execution) coordinated by orchestration layer
+
+2. **Code-Act Methodology**: Python code as action mechanism (more expressive than JSON)
+
+3. **Context Engineering**: Production-ready prompt architecture optimized for KV-cache
+
+4. **Browser Use Integration**: AI-controlled web automation via open-source framework
+
+5. **File-Based Memory**: Segregated storage keeps context manageable
+
+6. **Asynchronous Execution**: Continues working after user disconnects
+
+7. **Transparency**: Full session replay and debugging
+
+#### Lessons for Our System
+
+**What to Adopt**:
+
+✅ **Context Engineering Principles**:
+- Make context append-only (preserve KV-cache)
+- Use todo.md pattern for goal tracking
+- Store data in files, not context
+- Keep failed actions (learning from mistakes)
+
+✅ **Tool Masking**:
+- Keep all tools in context (stable)
+- Use state machine + logit masking to control availability
+- Avoid dynamic tool lists (breaks cache)
+
+✅ **Browser Use Integration**:
+- Add Browser Use framework for web automation
+- Combine with Playwright for reliability
+- Natural language task description
+
+✅ **Multi-Agent Pattern**:
+- Separate planner, executor, knowledge retrieval
+- Coordinate via orchestration layer
+- Context isolation between agents
+
+**What We Already Do Well**:
+- ✅ Event-driven architecture
+- ✅ Daytona sandboxes (better than Docker)
+- ✅ Structured actions (similar to Code-Act)
+- ✅ WebSocket real-time communication
+
+**Performance Comparison**:
+
+| Feature | Our System | Manus AI |
+|---------|-----------|----------|
+| **Sandbox** | Daytona (Firecracker) | Docker |
+| **Isolation** | VM-level | Container-level |
+| **Startup** | <90ms | ~1s |
+| **Action Format** | Structured (CREATE_FILE, EXECUTE) | Code-Act (Python) |
+| **Browser** | ❌ Not yet implemented | ✅ Browser Use |
+| **Context Optimization** | ❌ Not yet | ✅ KV-cache engineering |
+| **Multi-agent** | Single agent | Multiple specialized agents |
+| **Asynchronous** | ❌ User must stay connected | ✅ Cloud-based |
+
+**Next Steps** (Inspired by Manus):
+1. 🔲 Add Browser Use framework for web automation
+2. 🔲 Implement context engineering (KV-cache optimization)
+3. 🔲 Add todo.md pattern for goal tracking
+4. 🔲 File-based memory management
+5. 🔲 Multi-agent orchestration (planner, executor, knowledge)
+6. 🔲 Session replay and transparency features
+
+---
+
 ## 6. Architecture Comparison Matrix
 
 ### 6.1 Terminal Control Comparison
@@ -1600,18 +2097,33 @@ Based on comprehensive research, our current architecture is **solid and aligned
 
 ✅ **We're following OpenHands pattern**: Event-driven + sandbox execution
 ✅ **We're using the right tools**: Daytona (production-grade), FastAPI (modern), React (standard)
-✅ **We have room to grow**: Can add browser automation, LSP, enhanced terminal
+✅ **We have room to grow**: Can add browser automation, LSP, enhanced terminal, context engineering
+
+**Key Insights from Manus AI**:
+- 🎯 **Context Engineering > Fine-tuning**: KV-cache optimization is critical for production (10x cost difference)
+- 🎯 **Tool Masking**: Keep all tools in context, use state machine to control availability
+- 🎯 **File-Based Memory**: Store data in files, only conclusions in context
+- 🎯 **todo.md Pattern**: Maintain goal alignment in long-running tasks
+- 🎯 **Code-Act**: Python code more expressive than JSON for complex operations
 
 **Recommended next steps**:
-1. Add **browser automation** (browser-use + Playwright) for web tasks
-2. Implement **event sourcing** for reproducibility
-3. Add **enhanced terminal** (xterm.js) for better UX
-4. Consider **LSP integration** for code intelligence
+1. Add **browser automation** (browser-use + Playwright) for web tasks ⭐ **High Priority**
+2. Implement **context engineering** (KV-cache optimization, todo.md, file-based memory) ⭐ **High Priority**
+3. Add **event sourcing** for reproducibility
+4. Add **enhanced terminal** (xterm.js) for better UX
+5. Consider **LSP integration** for code intelligence
+6. Explore **multi-agent orchestration** (planner, executor, knowledge)
+
+**Our Advantages Over Manus**:
+- ✅ **Better Sandbox**: Daytona Firecracker (<90ms) vs Docker (~1s)
+- ✅ **VM Isolation**: Hardware-level security vs container-level
+- ✅ **Event-Driven**: Real-time WebSocket vs polling
 
 Our architecture is **production-ready** and can scale to handle complex agentic workflows! 🚀
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-11-17
+**Document Version**: 2.0
+**Last Updated**: 2025-11-17 (Added Manus AI research)
 **Research Status**: Complete ✅
+**Systems Researched**: OpenHands, SWE-agent, Anthropic Computer Use, Manus AI, Playwright, Browser Use, E2B, Daytona, LSP, PTY, Firecracker, WebContainers
