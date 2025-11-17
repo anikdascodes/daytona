@@ -1,0 +1,166 @@
+version: '3.8'
+
+services:
+  # ===========================================
+  # Backend Service (OpenHands + Daytona)
+  # ===========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agentic-backend
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    environment:
+      # LLM Configuration
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL}
+      - LLM_MODEL=${LLM_MODEL}
+      - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.7}
+      - LLM_MAX_TOKENS=${LLM_MAX_TOKENS:-4096}
+
+      # Daytona Configuration
+      - DAYTONA_API_KEY=${DAYTONA_API_KEY}
+      - DAYTONA_API_URL=${DAYTONA_API_URL}
+      - DAYTONA_TARGET=${DAYTONA_TARGET:-default}
+
+      # OpenHands Configuration
+      - SANDBOX_RUNTIME_CONTAINER_IMAGE=${SANDBOX_RUNTIME_CONTAINER_IMAGE}
+      - WORKSPACE_BASE=${WORKSPACE_BASE:-/workspace}
+      - AGENT_MAX_ITERATIONS=${AGENT_MAX_ITERATIONS:-100}
+      - AGENT_TIMEOUT=${AGENT_TIMEOUT:-300}
+
+      # Application Configuration
+      - BACKEND_PORT=3001
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DEBUG=${DEBUG:-false}
+      - LOG_ALL_EVENTS=${LOG_ALL_EVENTS:-false}
+
+      # Security
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - JWT_SECRET=${JWT_SECRET}
+      - SESSION_TIMEOUT=${SESSION_TIMEOUT:-3600}
+
+    volumes:
+      # Mount workspace directory
+      - ./workspace:/workspace
+      # Mount backend code for development
+      - ./backend:/app
+      # Preserve Python packages
+      - backend-packages:/usr/local/lib/python3.11/site-packages
+    networks:
+      - agentic-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ===========================================
+  # Frontend Service (React Chat Interface)
+  # ===========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: agentic-frontend
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      - VITE_BACKEND_URL=http://backend:3001
+      - VITE_WS_URL=ws://backend:3001/ws
+      - VITE_CODE_SERVER_URL=/vscode
+    volumes:
+      # Mount frontend code for development
+      - ./frontend:/app
+      # Preserve node_modules
+      - /app/node_modules
+    networks:
+      - agentic-network
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # ===========================================
+  # Code-Server (VS Code in Browser)
+  # ===========================================
+  code-server:
+    image: codercom/code-server:latest
+    container_name: agentic-vscode
+    ports:
+      - "${CODE_SERVER_PORT:-8080}:8080"
+    environment:
+      - PASSWORD=${CODE_SERVER_PASSWORD}
+      - SUDO_PASSWORD=${CODE_SERVER_PASSWORD}
+    volumes:
+      # Mount workspace
+      - ./workspace:/home/coder/workspace
+      # Persist VS Code extensions and settings
+      - code-server-data:/home/coder/.local/share/code-server
+      - code-server-config:/home/coder/.config
+    networks:
+      - agentic-network
+    restart: unless-stopped
+    command: >
+      --auth password
+      --bind-addr 0.0.0.0:8080
+      --disable-telemetry
+      /home/coder/workspace
+    user: "1000:1000"
+
+  # ===========================================
+  # Nginx Reverse Proxy
+  # ===========================================
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: agentic-nginx
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - agentic-network
+    depends_on:
+      - backend
+      - frontend
+      - code-server
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+# ===========================================
+# Networks
+# ===========================================
+networks:
+  agentic-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# ===========================================
+# Volumes (for persistence)
+# ===========================================
+volumes:
+  # Backend Python packages
+  backend-packages:
+    driver: local
+
+  # Code-Server data (extensions, settings)
+  code-server-data:
+    driver: local
+
+  code-server-config:
+    driver: local
+
+  # Workspace (commented out - using bind mount instead)
+  # workspace:
+  #   driver: local
