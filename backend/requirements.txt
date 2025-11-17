@@ -15,6 +15,10 @@ openai==1.12.0
 anthropic==0.18.1
 litellm==1.30.0
 
+# Browser Automation
+browser-use>=0.1.36
+playwright>=1.40.0
+
 # HTTP client
 httpx==0.26.0
 aiohttp==3.9.3

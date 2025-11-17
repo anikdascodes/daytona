@@ -10,6 +10,7 @@ from config import settings
 from utils.logger import logger
 from services.daytona_service import DaytonaService
 from services.planner_service import PlannerService
+from services.browser_service import browser_service
 
 
 class EnhancedAgentService:
@@ -84,6 +85,26 @@ AVAILABLE ACTIONS:
    WHAT: The Python script runs without errors
    HOW: Run: python script.py
    ---END---
+
+7. BROWSER - Interact with web browsers
+   FORMAT (Natural Language):
+   ACTION: BROWSER
+   TASK: Go to google.com and search for "Daytona sandboxes"
+   ---END---
+
+   FORMAT (Structured - for precise control):
+   ACTION: BROWSER
+   ACTION_TYPE: navigate
+   URL: https://example.com
+   ---END---
+
+   Supported structured actions:
+   - navigate: Open a URL
+   - click: Click on element (by selector)
+   - fill: Fill form field (by selector)
+   - extract: Extract data from page
+   - screenshot: Take screenshot
+   - get_content: Get page HTML
 
 WORKFLOW (VERY IMPORTANT):
 1. PLAN FIRST:
@@ -559,6 +580,43 @@ Begin execution now!"""}
                         "how": how_match.group(1).strip()
                     })
 
+            elif action_type == "BROWSER":
+                # Check if it's natural language task or structured action
+                task_match = re.search(r"TASK:\s*(.+?)(?:\n|$)", action_content, re.DOTALL)
+                action_type_match = re.search(r"ACTION_TYPE:\s*(.+?)(?:\n|$)", action_content)
+
+                if task_match:
+                    # Natural language task
+                    actions.append({
+                        "type": "BROWSER",
+                        "mode": "task",
+                        "task": task_match.group(1).strip()
+                    })
+                elif action_type_match:
+                    # Structured action
+                    browser_action_type = action_type_match.group(1).strip()
+                    url_match = re.search(r"URL:\s*(.+?)(?:\n|$)", action_content)
+                    selector_match = re.search(r"SELECTOR:\s*(.+?)(?:\n|$)", action_content)
+                    value_match = re.search(r"VALUE:\s*(.+?)(?:\n|$)", action_content)
+                    path_match = re.search(r"PATH:\s*(.+?)(?:\n|$)", action_content)
+
+                    browser_action = {
+                        "type": "BROWSER",
+                        "mode": "structured",
+                        "action_type": browser_action_type
+                    }
+
+                    if url_match:
+                        browser_action["url"] = url_match.group(1).strip()
+                    if selector_match:
+                        browser_action["selector"] = selector_match.group(1).strip()
+                    if value_match:
+                        browser_action["value"] = value_match.group(1).strip()
+                    if path_match:
+                        browser_action["path"] = path_match.group(1).strip()
+
+                    actions.append(browser_action)
+
         return actions
 
     async def _execute_action(self, action: Dict[str, Any]) -> Dict[str, Any]:
@@ -632,6 +690,55 @@ Begin execution now!"""}
                     "stderr": result.get("stderr", ""),
                     "verification_passed": result.get("exit_code", 0) == 0
                 }
+
+            elif action_type == "BROWSER":
+                # Execute browser action
+                mode = action.get("mode", "task")
+
+                if mode == "task":
+                    # Natural language task
+                    result = await browser_service.execute_browser_task(action["task"])
+                    return {
+                        "action": "BROWSER",
+                        "mode": "task",
+                        "task": action["task"],
+                        "success": result.get("success", False),
+                        "result": result.get("result", result.get("results", "")),
+                        "url": result.get("url", ""),
+                        "message": result.get("message", "")
+                    }
+
+                elif mode == "structured":
+                    # Structured action
+                    browser_action_type = action.get("action_type")
+                    browser_action_dict = {"type": browser_action_type}
+
+                    # Add optional parameters
+                    if "url" in action:
+                        browser_action_dict["url"] = action["url"]
+                    if "selector" in action:
+                        browser_action_dict["selector"] = action["selector"]
+                    if "value" in action:
+                        browser_action_dict["value"] = action["value"]
+                    if "path" in action:
+                        browser_action_dict["path"] = action["path"]
+
+                    result = await browser_service.execute_structured_action(browser_action_dict)
+                    return {
+                        "action": "BROWSER",
+                        "mode": "structured",
+                        "action_type": browser_action_type,
+                        "success": result.get("success", False),
+                        "result": result,
+                        "message": result.get("message", "")
+                    }
+
+                else:
+                    return {
+                        "action": "BROWSER",
+                        "success": False,
+                        "error": f"Unknown browser mode: {mode}"
+                    }
 
             else:
                 return {
