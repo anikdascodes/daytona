@@ -12,6 +12,7 @@ from config import settings
 from utils.logger import logger
 from services.daytona_service import daytona_service
 from services.agent_service import agent_service
+from services.enhanced_agent_service import enhanced_agent_service
 
 
 # ============================================
@@ -233,6 +234,65 @@ async def websocket_agent_endpoint(websocket: WebSocket):
 
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
+        try:
+            await ws_manager.send_message(websocket, {
+                "type": "error",
+                "message": str(e)
+            })
+        except:
+            pass
+        ws_manager.disconnect(websocket)
+
+
+@app.websocket("/ws/enhanced-agent")
+async def websocket_enhanced_agent_endpoint(websocket: WebSocket):
+    """
+    WebSocket endpoint for enhanced agent communication.
+
+    Enhanced agent features:
+    - Strategic planning before execution
+    - Do-try-test verification loop
+    - Learning from mistakes
+    - Self-improvement and reflection
+    - todo.md tracking pattern
+    """
+    await ws_manager.connect(websocket)
+
+    try:
+        while True:
+            # Receive message from client
+            data = await websocket.receive_json()
+
+            logger.info(f"Received enhanced agent request: {data}")
+
+            # Extract task information
+            task_id = data.get("task_id", str(uuid.uuid4()))
+            task_description = data.get("task", "")
+
+            if not task_description:
+                await ws_manager.send_message(websocket, {
+                    "type": "error",
+                    "message": "Task description is required"
+                })
+                continue
+
+            # Send acknowledgment
+            await ws_manager.send_message(websocket, {
+                "type": "task_received",
+                "task_id": task_id,
+                "message": f"🚀 Enhanced agent activated for: {task_description}"
+            })
+
+            # Execute task with enhanced agent
+            async for event in enhanced_agent_service.execute_task(task_description, task_id):
+                await ws_manager.send_message(websocket, event)
+
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+        logger.info("Enhanced agent WebSocket disconnected normally")
+
+    except Exception as e:
+        logger.error(f"Enhanced agent WebSocket error: {e}")
         try:
             await ws_manager.send_message(websocket, {
                 "type": "error",
