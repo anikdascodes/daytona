@@ -3,8 +3,7 @@ Daytona Service - Manages sandbox creation and operations.
 """
 import os
 from typing import Optional, Dict, Any
-from daytona_sdk import Daytona
-from daytona_sdk.models.sandbox import Sandbox
+from daytona_sdk import Daytona, Sandbox, DaytonaConfig
 from utils.logger import logger
 from config import settings
 
@@ -23,12 +22,15 @@ class DaytonaService:
         try:
             logger.info("Initializing Daytona client...")
 
-            # Initialize Daytona client
-            self.client = Daytona(
+            # Create Daytona config
+            config = DaytonaConfig(
                 api_key=settings.DAYTONA_API_KEY,
                 api_url=settings.DAYTONA_API_URL,
                 target=settings.DAYTONA_TARGET
             )
+
+            # Initialize Daytona client
+            self.client = Daytona(config=config)
 
             logger.info("✅ Daytona client initialized")
 
