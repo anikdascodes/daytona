@@ -442,7 +442,7 @@ class AdaptiveStrategySystem:
             )
 
         # Complex task requiring multiple agents
-        if complexity >= TaskComplexity.COMPLEX and len(agents) > 2:
+        if complexity.value >= TaskComplexity.COMPLEX.value and len(agents) > 2:
             # Use hierarchical if we have many agents
             if len(agents) >= 4:
                 return (

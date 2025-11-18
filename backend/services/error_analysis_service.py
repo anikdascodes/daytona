@@ -158,6 +158,9 @@ class ErrorAnalysisService:
         """
         try:
             # Build context for LLM
+            stack_trace_str = f'Stack Trace:\n{error.stack_trace}' if error.stack_trace else ''
+            context_str = f'Context:\n{json.dumps(error.context, indent=2)}' if error.context else ''
+
             context = f"""Error Analysis Request:
 
 Error Type: {error.error_type}
@@ -167,9 +170,9 @@ Agent State: {error.agent_state or 'Unknown'}
 Task: {error.task_description or 'Unknown'}
 Iteration: {error.iteration}
 
-{f'Stack Trace:\n{error.stack_trace}' if error.stack_trace else ''}
+{stack_trace_str}
 
-{f'Context:\n{json.dumps(error.context, indent=2)}' if error.context else ''}
+{context_str}
 
 Analyze this error and provide:
 1. Root cause analysis (why did this happen?)
