@@ -21,6 +21,7 @@ from services.knowledge_agent_service import knowledge_agent
 from services.agent_orchestrator import orchestrator, AgentType
 from services.error_analysis_service import error_analyzer
 from services.code_agent_service import code_agent
+from services.test_agent_service import test_agent
 from services.tool_masking_service import (
     tool_masking,
     AgentState,
@@ -908,6 +909,46 @@ Begin execution now!"""}
                     "quality_score": result.get("quality_check", {}).get("score", 0),
                     "metadata": result.get("metadata", {}),
                     "message": f"Code generation completed ({language})"
+                }
+
+            elif action_type == "GENERATE_TESTS":
+                # Generate tests using test agent
+                code = action.get("code")
+                language = action.get("language", "python")
+                test_type = action.get("test_type", "unit")
+                context = action.get("context")
+
+                logger.info(f"🧪 Generating {test_type} tests for {language} code...")
+
+                if test_type == "unit":
+                    result = await test_agent.generate_unit_tests(
+                        code=code,
+                        language=language,
+                        context=context
+                    )
+                elif test_type == "integration":
+                    components = action.get("components", [])
+                    result = await test_agent.generate_integration_tests(
+                        components=components,
+                        language=language,
+                        context=context
+                    )
+                else:
+                    result = {
+                        "success": False,
+                        "error": f"Unknown test type: {test_type}"
+                    }
+
+                return {
+                    "action": "GENERATE_TESTS",
+                    "test_type": test_type,
+                    "language": language,
+                    "success": result.get("success", False),
+                    "tests": result.get("tests", ""),
+                    "explanation": result.get("explanation", ""),
+                    "coverage": result.get("coverage_analysis", {}),
+                    "metadata": result.get("metadata", {}),
+                    "message": f"Test generation completed ({test_type})"
                 }
 
             else:

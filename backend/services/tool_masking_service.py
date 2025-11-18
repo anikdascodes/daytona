@@ -102,6 +102,13 @@ class ToolMaskingService:
             "format": "ACTION: GENERATE_CODE\nREQUIREMENTS: Create function to parse JSON\nLANGUAGE: python\nCONTEXT: {\"project\": \"data parser\"}\n---END---",
             "states": {AgentState.EXECUTING}
         },
+        "GENERATE_TESTS": {
+            "name": "GENERATE_TESTS",
+            "description": "Generate automated tests for code (test agent)",
+            "parameters": ["CODE", "LANGUAGE", "TEST_TYPE"],
+            "format": "ACTION: GENERATE_TESTS\nCODE: def add(a, b): return a + b\nLANGUAGE: python\nTEST_TYPE: unit\n---END---",
+            "states": {AgentState.EXECUTING, AgentState.VERIFYING}
+        },
         "THINK": {
             "name": "THINK",
             "description": "Internal reasoning and planning (no action taken)",
