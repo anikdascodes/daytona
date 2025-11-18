@@ -75,12 +75,9 @@ Agent: *Refactors, updates all usages, tests, and documents changes*
 ```python
 # Learning is automatic! Just use any agent
 python backend/demo_advanced_learning.py
-
-# View comprehensive guide
-cat ADVANCED_LEARNING_GUIDE.md
 ```
 
-📖 **Full Documentation**: [ADVANCED_LEARNING_GUIDE.md](./ADVANCED_LEARNING_GUIDE.md)
+📖 **Full Documentation**: [Advanced Learning Guide](./docs/guides/ADVANCED_LEARNING_GUIDE.md) | [All Documentation](./docs/README.md)
 
 ---
 
@@ -363,6 +360,23 @@ docker-compose ps
 # Test learning systems
 cd backend && python demo_advanced_learning.py
 ```
+
+---
+
+## 📚 Documentation
+
+**All documentation is organized in the [`docs/`](./docs/) directory:**
+
+| Category | Description | Link |
+|----------|-------------|------|
+| 📖 **Getting Started** | Quick start guides and setup help | [docs/](./docs/) |
+| 🧠 **Learning Systems** | Complete guide to all 5 AI learning components | [Advanced Learning Guide](./docs/guides/ADVANCED_LEARNING_GUIDE.md) |
+| 🤖 **AI Agents** | Individual guides for each specialized agent | [docs/guides/](./docs/guides/) |
+| 🏗️ **Architecture** | System design and architecture details | [Agentic System Design](./docs/guides/AGENTIC_SYSTEM_DESIGN.md) |
+| 🔒 **Security** | Security setup and best practices | [Security Guide](./docs/guides/SECURITY_SETUP.md) |
+| 📊 **Progress Reports** | Development history and testing results | [docs/progress/](./docs/progress/) |
+
+**👉 Browse all documentation:** [docs/README.md](./docs/README.md)
 
 ---
 
