@@ -19,6 +19,7 @@ from services.planner_service import PlannerService
 from services.browser_service import browser_service
 from services.knowledge_agent_service import knowledge_agent
 from services.agent_orchestrator import orchestrator, AgentType
+from services.error_analysis_service import error_analyzer
 from services.tool_masking_service import (
     tool_masking,
     AgentState,
@@ -424,12 +425,29 @@ Begin execution now!"""}
 
                         # If action failed, record error for learning
                         if not result.get("success"):
+                            # Old simple error memory (kept for backward compatibility)
                             self.error_memory.append({
                                 "action": action,
                                 "error": result.get("error"),
                                 "iteration": iteration,
                                 "task": task_description
                             })
+
+                            # NEW: Advanced error analysis
+                            await error_analyzer.record_error(
+                                error_message=result.get("error", "Unknown error"),
+                                error_type=result.get("error_type", action["type"] + "Error"),
+                                stack_trace=result.get("stack_trace"),
+                                context={
+                                    "action": action,
+                                    "result": result,
+                                    "previous_errors": len(self.error_memory)
+                                },
+                                action_attempted=action["type"],
+                                agent_state=tool_masking.current_state.value,
+                                task_description=task_description,
+                                iteration=iteration
+                            )
 
                 except Exception as e:
                     logger.error(f"❌ Error in iteration {iteration}: {e}")
@@ -469,12 +487,18 @@ Begin execution now!"""}
             set_agent_state(AgentState.IDLE)
 
             # Log tool masking statistics
-            stats = tool_masking.get_statistics()
-            logger.info(f"📊 Tool Masking Stats: {stats}")
+            masking_stats = tool_masking.get_statistics()
+            logger.info(f"📊 Tool Masking Stats: {masking_stats}")
+
+            # Log error analysis statistics
+            error_stats = error_analyzer.get_statistics()
+            logger.info(f"📊 Error Analysis Stats: {error_stats}")
+
             yield {
                 "type": "statistics",
-                "tool_masking": stats,
-                "message": "✅ Task execution complete with KV-cache optimization"
+                "tool_masking": masking_stats,
+                "error_analysis": error_stats,
+                "message": "✅ Task execution complete with KV-cache optimization and error learning"
             }
 
     def _generate_todo_md(self, plan: Dict[str, Any], task: str) -> str:
