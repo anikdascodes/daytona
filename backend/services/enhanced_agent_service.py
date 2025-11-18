@@ -18,6 +18,7 @@ from services.daytona_service import DaytonaService
 from services.planner_service import PlannerService
 from services.browser_service import browser_service
 from services.knowledge_agent_service import knowledge_agent
+from services.agent_orchestrator import orchestrator, AgentType
 from services.tool_masking_service import (
     tool_masking,
     AgentState,
@@ -663,6 +664,32 @@ Begin execution now!"""}
                         "max_results": int(max_results_match.group(1)) if max_results_match else 5
                     })
 
+            elif action_type == "DELEGATE":
+                # Parse DELEGATE action
+                agent_type_match = re.search(r"AGENT_TYPE:\s*(.+?)(?:\n|$)", action_content)
+                task_match = re.search(r"TASK:\s*(.+?)(?=\n---END---|$)", action_content, re.DOTALL)
+
+                if agent_type_match and task_match:
+                    agent_type_str = agent_type_match.group(1).strip().lower()
+                    # Map string to AgentType
+                    agent_type_map = {
+                        "knowledge": AgentType.KNOWLEDGE,
+                        "planner": AgentType.PLANNER,
+                        "browser": AgentType.BROWSER,
+                        "code": AgentType.CODE,
+                        "test": AgentType.TEST,
+                        "review": AgentType.REVIEW,
+                        "debug": AgentType.DEBUG
+                    }
+                    agent_type = agent_type_map.get(agent_type_str)
+
+                    if agent_type:
+                        actions.append({
+                            "type": "DELEGATE",
+                            "agent_type": agent_type,
+                            "task": task_match.group(1).strip()
+                        })
+
         return actions
 
     async def _execute_action(self, action: Dict[str, Any]) -> Dict[str, Any]:
@@ -802,6 +829,32 @@ Begin execution now!"""}
                     "timestamp": result.get("timestamp"),
                     "engine": result.get("engine", "duckduckgo"),
                     "message": f"Search completed: {query}"
+                }
+
+            elif action_type == "DELEGATE":
+                # Delegate task to specialized agent via orchestrator
+                agent_type = action.get("agent_type")
+                task = action.get("task")
+
+                logger.info(f"📤 Delegating to {agent_type.value}: {task[:50]}...")
+
+                # Delegate task
+                delegated_task = await orchestrator.delegate_task(
+                    agent_type=agent_type,
+                    description=task,
+                    input_data={"task": task}
+                )
+
+                # Return delegation result
+                return {
+                    "action": "DELEGATE",
+                    "agent_type": agent_type.value,
+                    "task_id": delegated_task.task_id,
+                    "success": delegated_task.status.value == "completed",
+                    "status": delegated_task.status.value,
+                    "result": delegated_task.result,
+                    "error": delegated_task.error,
+                    "message": f"Task delegated to {agent_type.value} agent"
                 }
 
             else:
