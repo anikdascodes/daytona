@@ -95,6 +95,13 @@ class ToolMaskingService:
             "format": "ACTION: SEARCH_WEB\nQUERY: latest python best practices\nMAX_RESULTS: 5\n---END---",
             "states": {AgentState.PLANNING, AgentState.EXECUTING, AgentState.LEARNING}
         },
+        "GENERATE_CODE": {
+            "name": "GENERATE_CODE",
+            "description": "Generate production-quality code from requirements (code agent)",
+            "parameters": ["REQUIREMENTS", "LANGUAGE", "CONTEXT"],
+            "format": "ACTION: GENERATE_CODE\nREQUIREMENTS: Create function to parse JSON\nLANGUAGE: python\nCONTEXT: {\"project\": \"data parser\"}\n---END---",
+            "states": {AgentState.EXECUTING}
+        },
         "THINK": {
             "name": "THINK",
             "description": "Internal reasoning and planning (no action taken)",

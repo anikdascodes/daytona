@@ -20,6 +20,7 @@ from services.browser_service import browser_service
 from services.knowledge_agent_service import knowledge_agent
 from services.agent_orchestrator import orchestrator, AgentType
 from services.error_analysis_service import error_analyzer
+from services.code_agent_service import code_agent
 from services.tool_masking_service import (
     tool_masking,
     AgentState,
@@ -879,6 +880,34 @@ Begin execution now!"""}
                     "result": delegated_task.result,
                     "error": delegated_task.error,
                     "message": f"Task delegated to {agent_type.value} agent"
+                }
+
+            elif action_type == "GENERATE_CODE":
+                # Generate code using code agent
+                requirements = action.get("requirements")
+                language = action.get("language", "python")
+                context = action.get("context")
+                existing_code = action.get("existing_code")
+
+                logger.info(f"🔨 Generating {language} code: {requirements[:50]}...")
+
+                result = await code_agent.generate_code(
+                    requirements=requirements,
+                    language=language,
+                    context=context,
+                    existing_code=existing_code
+                )
+
+                return {
+                    "action": "GENERATE_CODE",
+                    "requirements": requirements,
+                    "language": language,
+                    "success": result.get("success", False),
+                    "code": result.get("code", ""),
+                    "explanation": result.get("explanation", ""),
+                    "quality_score": result.get("quality_check", {}).get("score", 0),
+                    "metadata": result.get("metadata", {}),
+                    "message": f"Code generation completed ({language})"
                 }
 
             else:
