@@ -116,6 +116,13 @@ class ToolMaskingService:
             "format": "ACTION: REVIEW_CODE\nCODE: def process(data): ...\nLANGUAGE: python\nFOCUS_AREAS: [\"security\", \"performance\"]\n---END---",
             "states": {AgentState.VERIFYING, AgentState.LEARNING}
         },
+        "DEBUG_ERROR": {
+            "name": "DEBUG_ERROR",
+            "description": "Debug and resolve errors with AI-powered analysis (debug agent)",
+            "parameters": ["ERROR_MESSAGE", "STACK_TRACE", "CODE_CONTEXT", "LANGUAGE"],
+            "format": "ACTION: DEBUG_ERROR\nERROR_MESSAGE: AttributeError: 'NoneType' has no attribute 'value'\nSTACK_TRACE: [stack trace]\nCODE_CONTEXT: [relevant code]\nLANGUAGE: python\n---END---",
+            "states": {AgentState.EXECUTING, AgentState.VERIFYING, AgentState.LEARNING}
+        },
         "THINK": {
             "name": "THINK",
             "description": "Internal reasoning and planning (no action taken)",

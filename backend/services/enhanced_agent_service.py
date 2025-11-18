@@ -23,6 +23,7 @@ from services.error_analysis_service import error_analyzer
 from services.code_agent_service import code_agent
 from services.test_agent_service import test_agent
 from services.review_agent_service import review_agent
+from services.debug_agent_service import debug_agent
 from services.tool_masking_service import (
     tool_masking,
     AgentState,
@@ -989,6 +990,46 @@ Begin execution now!"""}
                         "action": "REVIEW_CODE",
                         "success": False,
                         "error": result.get("error", "Review failed")
+                    }
+
+            elif action_type == "DEBUG_ERROR":
+                # Debug error using debug agent
+                error_message = action.get("error_message")
+                stack_trace = action.get("stack_trace")
+                code_context = action.get("code_context")
+                language = action.get("language", "python")
+
+                logger.info(f"🐛 Debugging error: {error_message[:50]}...")
+
+                result = await debug_agent.debug_error(
+                    error_message=error_message,
+                    stack_trace=stack_trace,
+                    code_context=code_context,
+                    language=language
+                )
+
+                if result.get("success"):
+                    debug_result = result.get("debug_result", {})
+                    root_cause = debug_result.get("root_cause", {})
+                    fixes = debug_result.get("fixes", [])
+
+                    return {
+                        "action": "DEBUG_ERROR",
+                        "language": language,
+                        "success": True,
+                        "root_cause": root_cause.get("root_cause", "Unknown"),
+                        "explanation": root_cause.get("explanation", ""),
+                        "fixes_count": len(fixes),
+                        "top_fixes": fixes[:3],  # Top 3 fixes
+                        "severity": debug_result.get("severity", "medium"),
+                        "debugging_strategy": debug_result.get("debugging_strategy", {}),
+                        "message": f"Debug analysis complete: {len(fixes)} fixes generated"
+                    }
+                else:
+                    return {
+                        "action": "DEBUG_ERROR",
+                        "success": False,
+                        "error": result.get("error", "Debug failed")
                     }
 
             else:
