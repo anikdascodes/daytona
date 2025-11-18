@@ -22,6 +22,7 @@ from services.agent_orchestrator import orchestrator, AgentType
 from services.error_analysis_service import error_analyzer
 from services.code_agent_service import code_agent
 from services.test_agent_service import test_agent
+from services.review_agent_service import review_agent
 from services.tool_masking_service import (
     tool_masking,
     AgentState,
@@ -950,6 +951,45 @@ Begin execution now!"""}
                     "metadata": result.get("metadata", {}),
                     "message": f"Test generation completed ({test_type})"
                 }
+
+            elif action_type == "REVIEW_CODE":
+                # Review code using review agent
+                code = action.get("code")
+                language = action.get("language", "python")
+                focus_areas = action.get("focus_areas")
+                context = action.get("context")
+
+                logger.info(f"🔍 Reviewing {language} code...")
+
+                result = await review_agent.review_code(
+                    code=code,
+                    language=language,
+                    context=context,
+                    focus_areas=focus_areas
+                )
+
+                if result.get("success"):
+                    review = result.get("review", {})
+                    summary = review.get("summary", {})
+
+                    return {
+                        "action": "REVIEW_CODE",
+                        "language": language,
+                        "success": True,
+                        "quality_score": summary.get("quality_score", 0),
+                        "grade": summary.get("grade", "N/A"),
+                        "total_issues": summary.get("total_issues", 0),
+                        "by_severity": summary.get("by_severity", {}),
+                        "recommendation": summary.get("recommendation", ""),
+                        "review_details": review,
+                        "message": f"Code review completed (Score: {summary.get('quality_score', 0)}/100)"
+                    }
+                else:
+                    return {
+                        "action": "REVIEW_CODE",
+                        "success": False,
+                        "error": result.get("error", "Review failed")
+                    }
 
             else:
                 return {

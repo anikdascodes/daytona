@@ -109,6 +109,13 @@ class ToolMaskingService:
             "format": "ACTION: GENERATE_TESTS\nCODE: def add(a, b): return a + b\nLANGUAGE: python\nTEST_TYPE: unit\n---END---",
             "states": {AgentState.EXECUTING, AgentState.VERIFYING}
         },
+        "REVIEW_CODE": {
+            "name": "REVIEW_CODE",
+            "description": "Review code for security, performance, and quality (review agent)",
+            "parameters": ["CODE", "LANGUAGE", "FOCUS_AREAS"],
+            "format": "ACTION: REVIEW_CODE\nCODE: def process(data): ...\nLANGUAGE: python\nFOCUS_AREAS: [\"security\", \"performance\"]\n---END---",
+            "states": {AgentState.VERIFYING, AgentState.LEARNING}
+        },
         "THINK": {
             "name": "THINK",
             "description": "Internal reasoning and planning (no action taken)",
