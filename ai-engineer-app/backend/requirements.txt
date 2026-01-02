@@ -1,0 +1,23 @@
+# AI Engineer Backend Dependencies
+
+# Web Framework
+fastapi>=0.109.0
+uvicorn>=0.27.0
+python-multipart>=0.0.6
+websockets>=12.0
+
+# Data Validation
+pydantic>=2.5.0
+
+# Environment
+python-dotenv>=1.0.0
+
+# LLM Integration
+litellm>=1.0.0
+
+# Runtime Providers
+docker>=7.0.0
+aiohttp>=3.9.0
+
+# Optional: Daytona SDK (uncomment if using Daytona)
+# daytona-sdk>=0.1.0
